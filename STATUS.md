@@ -1,25 +1,25 @@
 # 4090 训练状态（自动推送）
 
-- 更新时间: 2026-08-22 20:20:36
+- 更新时间: 2026-08-22 20:23:01
 
 ## GPU
 0, NVIDIA GeForce RTX 4090, 0 %, 940 MiB
-1, NVIDIA GeForce RTX 4090, 87 %, 6788 MiB
+1, NVIDIA GeForce RTX 4090, 83 %, 6788 MiB
 
 ## humanoid-gym 训练进程
 3478019 python scripts/train.py --task=humanoid_ppo --run_name xbotl_4096_v1 --headless --num_envs 4096
 
 ## 训练摘要（hg_train_xbotl_v1.log）
-                     [1m Learning iteration 1886/3001 [0m                     
-                       Mean reward: 175.12
+                     [1m Learning iteration 1934/3001 [0m                     
+                       Mean reward: 175.81
                Mean episode length: 2401.00
-                   Total timesteps: 463749120
-                               ETA: 3553.6s
-                     [1m Learning iteration 1887/3001 [0m                     
-                       Mean reward: 175.40
+                   Total timesteps: 475545600
+                               ETA: 3400.1s
+                     [1m Learning iteration 1935/3001 [0m                     
+                       Mean reward: 176.35
                Mean episode length: 2401.00
-                   Total timesteps: 463994880
-                               ETA: 3550.4s
+                   Total timesteps: 475791360
+                               ETA: 3396.9s
 
 ## 最新 checkpoint
 
