@@ -1,9 +1,9 @@
 # 4090 训练状态（自动推送）
 
-- 更新时间: 2026-08-22 21:23:01
+- 更新时间: 2026-08-22 21:44:42
 
 ## GPU
-0, NVIDIA GeForce RTX 4090, 2 %, 607 MiB
+0, NVIDIA GeForce RTX 4090, 1 %, 607 MiB
 1, NVIDIA GeForce RTX 4090, 0 %, 18 MiB
 
 ## humanoid-gym 训练进程
@@ -21,6 +21,9 @@
                                ETA: 3.2s
 
 ## 最新 checkpoint
+/home/robot/humanoid-gym/logs/XBot_ppo/Aug22_18-39-52_xbotl_4096_v1/model_3001.pt
+/home/robot/humanoid-gym/logs/XBot_ppo/Aug22_18-39-52_xbotl_4096_v1/model_3000.pt
+/home/robot/humanoid-gym/logs/XBot_ppo/Aug22_18-39-52_xbotl_4096_v1/model_2900.pt
 
 ## HOVER 最近产物
 总计 8
