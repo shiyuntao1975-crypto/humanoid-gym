@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: BSD-3-Clause
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -24,13 +24,21 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Copyright (c) 2024 Beijing RobotEra TECHNOLOGY CO.,LTD. All rights reserved.
 
+# Copyright (c) 2024 Beijing RobotEra TECHNOLOGY CO.,LTD. All rights reserved.
+#
+# Fork patch (2026-08-22): added --video mode for headless offscreen rendering
+# (EGL + mujoco.Renderer + cv2 MP4 writer, camera follows the robot base).
+# Default behavior (interactive mujoco_viewer window) is unchanged.
+
+import os
+os.environ.setdefault("MUJOCO_GL", "egl")  # headless-safe; override to glfw for interactive use
 
 import math
 import numpy as np
 import mujoco, mujoco_viewer
+import cv2
+from datetime import datetime
 from tqdm import tqdm
 from collections import deque
 from scipy.spatial.transform import Rotation as R
@@ -48,22 +56,22 @@ class cmd:
 def quaternion_to_euler_array(quat):
     # Ensure quaternion is in the correct format [x, y, z, w]
     x, y, z, w = quat
-    
+
     # Roll (x-axis rotation)
     t0 = +2.0 * (w * x + y * z)
     t1 = +1.0 - 2.0 * (x * x + y * y)
     roll_x = np.arctan2(t0, t1)
-    
+
     # Pitch (y-axis rotation)
     t2 = +2.0 * (w * y - z * x)
     t2 = np.clip(t2, -1.0, 1.0)
     pitch_y = np.arcsin(t2)
-    
+
     # Yaw (z-axis rotation)
     t3 = +2.0 * (w * z + x * y)
     t4 = +1.0 - 2.0 * (y * y + z * z)
     yaw_z = np.arctan2(t3, t4)
-    
+
     # Returns roll, pitch, yaw in a NumPy array in radians
     return np.array([roll_x, pitch_y, yaw_z])
 
@@ -84,13 +92,14 @@ def pd_control(target_q, q, kp, target_dq, dq, kd):
     '''
     return (target_q - q) * kp + (target_dq - dq) * kd
 
-def run_mujoco(policy, cfg):
+def run_mujoco(policy, cfg, video=False):
     """
     Run the Mujoco simulation using the provided policy and configuration.
 
     Args:
         policy: The policy used for controlling the simulation.
         cfg: The configuration object containing simulation settings.
+        video: If True, render offscreen with EGL and write an MP4 (headless);
 
     Returns:
         None
@@ -99,7 +108,21 @@ def run_mujoco(policy, cfg):
     model.opt.timestep = cfg.sim_config.dt
     data = mujoco.MjData(model)
     mujoco.mj_step(model, data)
-    viewer = mujoco_viewer.MujocoViewer(model, data)
+
+    if video:
+        model.vis.global_.offwidth = 1280
+        model.vis.global_.offheight = 720
+        renderer = mujoco.Renderer(model, height=720, width=1280)
+        cam = mujoco.MjvCamera()
+        mujoco.mjv_defaultFreeCamera(model, cam)
+        cam.distance = 3.0
+        cam.elevation = -10
+        video_dir = os.path.join(LEGGED_GYM_ROOT_DIR, 'videos', 'sim2sim')
+        os.makedirs(video_dir, exist_ok=True)
+        video_path = os.path.join(video_dir, datetime.now().strftime('%b%d_%H-%M-%S') + '.mp4')
+        writer = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*"mp4v"), 50.0, (1280, 720))
+    else:
+        viewer = mujoco_viewer.MujocoViewer(model, data)
 
     target_q = np.zeros((cfg.env.num_actions), dtype=np.double)
     action = np.zeros((cfg.env.num_actions), dtype=np.double)
@@ -158,19 +181,31 @@ def run_mujoco(policy, cfg):
         data.ctrl = tau
 
         mujoco.mj_step(model, data)
-        viewer.render()
+        if video:
+            if count_lowlevel % 20 == 0:  # 1kHz -> 50fps
+                cam.lookat[:] = [data.qpos[0], data.qpos[1], 0.8]  # follow the robot base
+                renderer.update_scene(data, cam)
+                writer.write(cv2.cvtColor(renderer.render(), cv2.COLOR_RGB2BGR))
+        else:
+            viewer.render()
         count_lowlevel += 1
 
-    viewer.close()
+    if video:
+        writer.release()
+        print('Saved sim2sim video to:', video_path)
+    else:
+        viewer.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description='Deployment script.')
     parser.add_argument('--load_model', type=str, required=True,
                         help='Run to load from.')
     parser.add_argument('--terrain', action='store_true', help='terrain or plane')
+    parser.add_argument('--video', action='store_true',
+                        help='headless offscreen render to MP4 (EGL) instead of interactive viewer')
     args = parser.parse_args()
 
     class Sim2simCfg(XBotLCfg):
@@ -190,4 +225,4 @@ if __name__ == '__main__':
             tau_limit = 200. * np.ones(12, dtype=np.double)
 
     policy = torch.jit.load(args.load_model)
-    run_mujoco(policy, Sim2simCfg())
+    run_mujoco(policy, Sim2simCfg(), video=args.video)
