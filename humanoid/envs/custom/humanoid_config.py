@@ -31,6 +31,10 @@
 from humanoid.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
 
+import os
+_DR = os.environ.get("HG_DR_BOOST", "0") == "1"  # v2: stronger DR arm
+
+
 class XBotLCfg(LeggedRobotCfg):
     """
     Configuration class for the XBotL humanoid robot.
@@ -87,7 +91,7 @@ class XBotLCfg(LeggedRobotCfg):
 
     class noise:
         add_noise = True
-        noise_level = 0.6    # scales other values
+        noise_level = 0.8 if _DR else 0.6    # v2 DR boost gated by HG_DR_BOOST
 
         class noise_scales:
             dof_pos = 0.05
@@ -152,12 +156,12 @@ class XBotLCfg(LeggedRobotCfg):
         randomize_base_mass = True
         added_mass_range = [-5., 5.]
         push_robots = True
-        push_interval_s = 4
-        max_push_vel_xy = 0.2
-        max_push_ang_vel = 0.4
+        push_interval_s = 3 if _DR else 4
+        max_push_vel_xy = 0.4 if _DR else 0.2
+        max_push_ang_vel = 0.8 if _DR else 0.4
         # dynamic randomization
         action_delay = 0.5
-        action_noise = 0.02
+        action_noise = 0.05 if _DR else 0.02
 
     class commands(LeggedRobotCfg.commands):
         # Vers: lin_vel_x, lin_vel_y, ang_vel_yaw, heading (in heading mode ang_vel_yaw is recomputed from heading error)
@@ -248,7 +252,7 @@ class XBotLCfgPPO(LeggedRobotCfgPPO):
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
         num_steps_per_env = 60  # per iteration
-        max_iterations = 3001  # number of policy updates
+        max_iterations = 10000  # v2: longer training (v1=3001 reached reward 178 but sim2sim FAIL@6.6s)
 
         # logging
         save_interval = 100  # Please check for potential savings every `save_interval` iterations.
