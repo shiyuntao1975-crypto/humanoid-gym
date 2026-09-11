@@ -1,10 +1,10 @@
 # 4090 训练状态（自动推送）
 
-- 更新时间: 2026-09-11 17:23:01
+- 更新时间: 2026-09-11 17:53:01
 
 ## GPU
-0, NVIDIA GeForce RTX 4090, 40 %, 746 MiB
-1, NVIDIA GeForce RTX 4090, 87 %, 18938 MiB
+0, NVIDIA GeForce RTX 4090, 0 %, 648 MiB
+1, NVIDIA GeForce RTX 4090, 89 %, 18938 MiB
 
 ## humanoid-gym 训练进程
 
