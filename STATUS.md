@@ -1,10 +1,10 @@
 # 4090 训练状态（自动推送）
 
-- 更新时间: 2026-10-08 15:53:01
+- 更新时间: 2026-10-08 16:23:01
 
 ## GPU
-NVIDIA-SMI has failed because it couldn't communicate with the NVIDIA driver. Make sure that the latest NVIDIA driver is installed and running.
-
+0, NVIDIA GeForce RTX 4090, 6 %, 581 MiB
+1, NVIDIA GeForce RTX 4090, 0 %, 15 MiB
 
 ## humanoid-gym 训练进程
 
